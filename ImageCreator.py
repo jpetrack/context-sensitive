@@ -4,6 +4,11 @@ Created on Wed Mar 30 15:13:19 2016
 
 @author: josh
 """
+
+# This is the file for my intermediate representation. 
+# It is a bunch of hierarchical classes that, together, are capable of
+# storing and rendering animations.
+
 from PIL import Image, ImageDraw
 from copy import deepcopy
 from random import random
@@ -12,6 +17,8 @@ class ImageCreator:
     An ImageCreator is essentially a list of all of the Elements in an image.
     It keeps track of what frame the animation is currently in, and is in
     charge of rendering each frame of the final animation.
+    
+    It is the top-level class in the hierarchy. It controls top-level actions.
     """
     def __init__(self, width = 800, height = 600, elems = [], outputpath = "", totalFrames = 20):
         self.width = width
@@ -141,11 +148,38 @@ class Shape(object):
         self.scale = 1
         self.x = 0
         self.y = 0
+        self.width = 100
+        self.height = 100
         self.rotation = 0
+        self.alpha = 1
 
     
-    def render(self, image, draw):    
-        pass
+    def render(self, image, draw):
+        """
+        This function renders the shape, with all modifications stored in it.
+        It relies on calling self.draw, which will be different depending on
+        what kind of shape (rectangle, ellipse, etc) this is.
+        """
+        width = self.width * self.scale
+        height = self.height * self.scale
+        
+        newImage = Image.new("RGB", (int(width), int(height)), 0)
+        newdraw = ImageDraw.Draw(newImage)
+        self.draw(newdraw, 'hsl(%d, %d%%, %d%%)' % tuple(self.fill), width, height)
+        newImage = newImage.rotate(self.rotation, expand = 1)
+        # Unfortunately we have to make this ugly mask to make the
+        # pasting process work as we want it to. It handles rotation and alpha.      
+        
+        mask = Image.new("RGBA", (int(width), int(height)), 0)    
+        alphamask = Image.new("L", (int(width), int(height)), 0)
+        amdraw = ImageDraw.Draw(alphamask)
+        self.draw(amdraw, int(255 * self.alpha), width, height)
+        mask.putalpha(alphamask)
+        
+        mask = mask.rotate(self.rotation, expand = 1)
+        image.paste(newImage, (int(self.x - mask.size[0]/2.0), int(self.y - mask.size[1]/2.0)), mask)
+    
+
     
     def withModifications(self, modifications):
         """
@@ -153,6 +187,8 @@ class Shape(object):
         Those modifications can take the following forms:
         "changehue x" increases the hue by x
         "sethue x" sets the hue to x
+        "changealpha x" multiplies the alpha by x
+        "setalpha x" sets the alpha to x
         "scale x" multiplies the scale by x
         "translate x y" translates by the tuple (x, y)
         "rotate x" rotates by x degrees
@@ -165,6 +201,12 @@ class Shape(object):
                 newShape.fill[0] += int(desc[1])
             if desc[0] == "sethue":
                 newShape.fill[0] = int(desc[1])
+            if desc[0] == "changealpha":
+                newShape.alpha *= float(desc[1])
+                if newShape.alpha > 1:
+                    newShape.alpha = 1
+            if desc[0] == "setalpha":
+                newShape.alpha = float(desc[1])
             if desc[0] == "scale":
                 newShape.scale *= float(desc[1])
             if desc[0] == "translate":
@@ -191,23 +233,9 @@ class Rectangle(Shape):
         self.y = y
         self.width = width
         self.height = height
-    def render(self, image, draw):
         
-        width = self.width * self.scale
-        height = self.height * self.scale
-        
-        newRect = Image.new("RGB", (int(width), int(height)), 'hsl(%d, %d%%, %d%%)' % tuple(self.fill))
-        newRect = newRect.rotate(self.rotation, expand = 1)
-        # Unfortunately we have to make this ugly mask to make the
-        # pasting process work as we want it to.        
-        
-        mask = Image.new("1", (int(width), int(height)), 255)
-        mask = mask.rotate(self.rotation, expand = 1)
-        image.paste(newRect, (int(self.x - mask.size[0]/2.0), int(self.y - mask.size[1]/2.0)), mask)
-        #draw.rectangle(((self.x - width/2.0, self.y - width/2.0), 
-        #                (self.x + width/2.0, self.y + height/2.0)), 
-        #                fill='hsl(%d, %d%%, %d%%)' % tuple(self.fill))
-                        
+    def draw(self, xdraw, fillvalue, width, height):
+        xdraw.rectangle(((0, 0), (int(width), int(height))), fill=fillvalue)                    
     
 
 class Ellipse(Shape):
@@ -220,15 +248,9 @@ class Ellipse(Shape):
         self.y = y
         self.width = width
         self.height = height
-    def render(self, image, draw):
-        width = self.width * self.scale
-        height = self.height * self.scale
-        draw.ellipse(((self.x - width/2.0, self.y - width/2.0), 
-                        (self.x + width/2.0, self.y + height/2.0)), 
-                        fill='hsl(%d, %d%%, %d%%)' % tuple(self.fill))
-    
 
-    
+    def draw(self, xdraw, fillvalue, width, height):
+        xdraw.ellipse(((0, 0), (int(width), int(height))), fill=fillvalue)
     
     
     

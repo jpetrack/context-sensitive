@@ -105,22 +105,45 @@ import ImageCreator
 
 
 
-# TEST 7
+## TEST 7
+#
+#frame = ImageCreator.Rectangle(50, 256, 100, 100)
+#anim = []
+#for i in xrange(20):
+#    anim.append(frame.withModifications(["rotate %f" % (18*i), "changehue 180"]))
+#elem = ImageCreator.Element(anim)
+#
+#
+#rule1 = ImageCreator.Rule("rule1", [[1, (elem, []), ("rule1", ["rtranslate %d %d" % (50, 0), "scale .9", "changehue 5", "delay 1"])]])
+##rule2 = ImageCreator.Rule("rule2", [[1, (elem, []), ("rule1", ["translate %d %d" % (0, 7)])]])
+#
+#d = ImageCreator.RuleDict([rule1])
+#
+#
+#creator = ImageCreator.ImageCreator(512, 512, d.chooseAndExecuteRule(), "rtranslatetest", 300)
+##print map(lambda k: k.frameList[0], d.chooseAndExecuteRule())
+#creator.renderAnimation()
 
-frame = ImageCreator.Rectangle(50, 256, 100, 100)
+
+
+
+
+# TEST 8-9 (change ellipse to rectangle and change width/height)
+
+frame = ImageCreator.Ellipse(50, 256, 100, 200)
 anim = []
 for i in xrange(20):
-    anim.append(frame.withModifications(["rotate %f" % (18*i), "changehue 180"]))
+    anim.append(frame.withModifications(["rotate %f" % (18*i), "changehue 180", "setalpha .3"]))
 elem = ImageCreator.Element(anim)
 
 
-rule1 = ImageCreator.Rule("rule1", [[1, (elem, []), ("rule1", ["rtranslate %d %d" % (50, 0), "scale .9", "changehue 5", "delay 1"])]])
+rule1 = ImageCreator.Rule("rule1", [[1, (elem, []), ("rule1", ["rtranslate %d %d" % (50, 0), "scale .9", "changehue 5", "delay 1", "changealpha 1.1"])]])
 #rule2 = ImageCreator.Rule("rule2", [[1, (elem, []), ("rule1", ["translate %d %d" % (0, 7)])]])
 
 d = ImageCreator.RuleDict([rule1])
 
 
-creator = ImageCreator.ImageCreator(512, 512, d.chooseAndExecuteRule(), "rtranslatetest", 300)
+creator = ImageCreator.ImageCreator(512, 512, d.chooseAndExecuteRule(), "ellipsetest", 300)
 #print map(lambda k: k.frameList[0], d.chooseAndExecuteRule())
 creator.renderAnimation()
 
