@@ -12,6 +12,7 @@ Created on Wed Mar 30 15:13:19 2016
 from PIL import Image, ImageDraw
 from copy import deepcopy
 from random import random
+import math
 class ImageCreator:
     """
     An ImageCreator is essentially a list of all of the Elements in an image.
@@ -213,9 +214,11 @@ class Shape(object):
                 newShape.x += float(desc[1])
                 newShape.y += float(desc[2])
             if desc[0] == "rtranslate":
-                # Relative translate. Translate relative to scale.
-                newShape.x += float(desc[1]) * newShape.scale
-                newShape.y += float(desc[2]) * newShape.scale
+                # Relative translate. Translate relative to scale & rotation.
+                newShape.x += float(desc[1]) * newShape.scale * math.cos((math.pi / 180) * newShape.rotation)
+                newShape.y -= float(desc[1]) * newShape.scale * math.sin((math.pi / 180) * newShape.rotation)
+                newShape.x -= float(desc[2]) * newShape.scale * math.sin((math.pi / 180) * newShape.rotation)
+                newShape.y -= float(desc[2]) * newShape.scale * math.cos((math.pi / 180) * newShape.rotation)
             if desc[0] == "rotate":
                 newShape.rotation += float(desc[1])
             if desc[0] == "delay":
