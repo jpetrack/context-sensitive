@@ -5,7 +5,8 @@ Created on Wed Mar 30 15:38:06 2016
 @author: josh
 """
 import ImageCreator
-
+from ImageCreator import Modifications
+from copy import deepcopy
 
 # TEST 1
 #frame1 = ImageCreator.Rectangle(100, 100, 50, 50)
@@ -148,22 +149,82 @@ import ImageCreator
 #creator.renderAnimation()
 
 
-# TEST 11 (improving on 10)
+## TEST 11 (improving on 10)
+#
+#frame = ImageCreator.Ellipse(256, 256, 1, 2)
+#anim = []
+#for i in xrange(180):
+#    anim.append(frame.withModifications(["rotate %d" % (-2 * i), "changehue %d" % (130 + 10*i), "setalpha .7"]))
+#elem = ImageCreator.Element(anim)
+#
+#rule0 = ImageCreator.Rule("rule0", [[1, ("rule1", []), ("rule1", ["scale .9", "changealpha .3", "changehue 120"])]])
+#rule1 = ImageCreator.Rule("rule1", [[1, ("rule2", []), ("rule2", ["rotate 60", "changehue 60"]), ("rule2", ["rotate 120", "changehue 120"]), ("rule2", ["rotate 180", "changehue 180"]), ("rule2", ["rotate 240", "changehue 240"]), ("rule2", ["rotate 300", "changehue 300"])]])
+#rule2 = ImageCreator.Rule("rule2", [[1, (elem, []), ("rule2", ["rtranslate %d %d" % (2, 0), "rotate 12", "scale 1.22", "changehue 5"])]])
+#
+#d = ImageCreator.RuleDict([rule0, rule1, rule2])
+#
+#
+#creator = ImageCreator.ImageCreator(512, 512, d.chooseAndExecuteRule(), "rtranslatetest2", 200)
+##print map(lambda k: k.frameList[0], d.chooseAndExecuteRule())
+#creator.renderAnimation()
 
-frame = ImageCreator.Ellipse(256, 256, 1, 2)
+
+## TEST 12
+#
+#frame = ImageCreator.Rectangle(256, 256, 512, 512)
+#anim = []
+#for i in xrange(180):
+#    anim.append(frame.withModifications(["rotate %d" % (2 * i), "changehue %d" % (230 + 8*i)]))
+#elem = ImageCreator.Element(anim)
+#
+#anim2 = []
+#for i in xrange(180):
+#    anim2.append(frame.withModifications(["rotate %d" % (-4 * i), "changehue %d" % (280 - 6*i)]))
+#elem2 = ImageCreator.Element(anim2)
+#
+#anim3 = []
+#for i in xrange(180):
+#    anim3.append(frame.withModifications(["rotate %d" % (4 * i), "changehue %d" % (10 + 4*i)]))
+#elem3 = ImageCreator.Element(anim3)
+#
+#anim4 = []
+#for i in xrange(180):
+#    anim4.append(frame.withModifications(["rotate %d" % (-2 * i), "changehue %d" % (90 - 16*i)]))
+#elem4 = ImageCreator.Element(anim4)
+#
+#rule0 = ImageCreator.Rule("rule0", [[1, (elem, []), ("rule0", ["scale .95", "changealpha .95", "rotate 20"])],
+#                                    [1, (elem3, []), ("rule0", ["scale .95", "changealpha .95", "rotate -27"])],
+#                                    [1, (elem4, []), ("rule0", ["scale .95", "changealpha .95", "changehue 70"])],
+#                                    [1, (elem2, []), ("rule0", ["scale .95", "changealpha .95", "changehue -90"])],
+#                                    [1, (elem, []), ("rule0", ["scale .95", "changealpha .95", "rtranslate 50 0"])],
+#                                    [1, (elem2, []), ("rule0", ["scale .95", "changealpha .95", "rtranslate 0 50"])],
+#                                    [1, (elem3, []), ("rule0", ["scale .95", "changealpha .95", "rtranslate 0 -50"])],
+#                                    [1, (elem4, []), ("rule0", ["scale .95", "changealpha .95", "rtranslate -50 0"])],])
+#
+#d = ImageCreator.RuleDict([rule0])
+#
+#
+#creator = ImageCreator.ImageCreator(512, 512, d.chooseAndExecuteRule(), "arttestb", 200)
+##print map(lambda k: k.frameList[0], d.chooseAndExecuteRule())
+#creator.renderAnimation()
+
+
+
+# TEST 13 (new method for modifications)
+frame = ImageCreator.Rectangle(256, 256, 512, 512)
 anim = []
-for i in xrange(180):
-    anim.append(frame.withModifications(["rotate %d" % (-2 * i), "changehue %d" % (130 + 10*i), "setalpha .7"]))
+for i in xrange(18):
+    frame = deepcopy(frame)
+    (Modifications.Rotate(10) + Modifications.ChangeHue(-20)).modifyShape(frame)
+    anim.append(frame)
 elem = ImageCreator.Element(anim)
 
-rule0 = ImageCreator.Rule("rule0", [[1, ("rule1", []), ("rule1", ["scale .9", "changealpha .3", "changehue 120"])]])
-rule1 = ImageCreator.Rule("rule1", [[1, ("rule2", []), ("rule2", ["rotate 60", "changehue 60"]), ("rule2", ["rotate 120", "changehue 120"]), ("rule2", ["rotate 180", "changehue 180"]), ("rule2", ["rotate 240", "changehue 240"]), ("rule2", ["rotate 300", "changehue 300"])]])
-rule2 = ImageCreator.Rule("rule2", [[1, (elem, []), ("rule2", ["rtranslate %d %d" % (2, 0), "rotate 12", "scale 1.22", "changehue 5"])]])
 
-d = ImageCreator.RuleDict([rule0, rule1, rule2])
+rule0 = ImageCreator.Rule("rule0", [[1, (elem, Modifications()), ("rule0", Modifications.Rotate(5) + Modifications.Scale(.95) + Modifications.ChangeHue(10) + Modifications.ChangeSaturation(.9))], 
+                                     [.9, (elem, Modifications()), ("rule0", Modifications.Scale(.95) + Modifications.ChangeHue(10) + Modifications.ChangeSaturation(.9))]])
 
+d = ImageCreator.RuleDict([rule0])
 
-creator = ImageCreator.ImageCreator(512, 512, d.chooseAndExecuteRule(), "rtranslatetest2", 200)
-#print map(lambda k: k.frameList[0], d.chooseAndExecuteRule())
+creator = ImageCreator.ImageCreator(512, 512, d.chooseAndExecuteRule(), "modificationstest", 200)
+#print map(lambda k: k.frameList[0].rotation, creator.elements)
 creator.renderAnimation()
-

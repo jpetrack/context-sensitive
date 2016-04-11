@@ -38,7 +38,9 @@ class ImageCreator:
             
         
     def renderAnimation(self):
+        print "Rendering %d total frames..." % self.totalFrames
         for i in xrange(self.totalFrames):
+            print "Rendering frame %d." % i
             im = Image.new("RGBA", (self.width, self.height), "white")
             draw = ImageDraw.Draw(im)
             self.renderFrame(im, draw)
@@ -54,15 +56,23 @@ class RuleDict:
     """
     def __init__(self, rules):
         self.rules = {}
+        self.ruleLimits = {}
         for rule in rules:
             self.rules[rule.name] = rule.executionRules
+            self.ruleLimits[rule.name] = rule.limit
         self.initialRule = rules[0].executionRules
         
-    def chooseAndExecuteRule(self, executionRules = 0, existingModifications = [], remainingDepthLimit = 20):
-        if remainingDepthLimit == 0:
+    def chooseAndExecuteRule(self, executionRules = 0, existingModifications = 0):
+        if 0 in self.ruleLimits.values():
             return []
         if executionRules == 0:
+            # Placeholder value; this means we need to call the top-level rule.
             executionRules = self.initialRule
+        if existingModifications == 0:
+            # Placeholder value; make a new blank modifications object.
+            existingModifications = Modifications()
+            
+        # Determine which version of our rule we need to call.
         choice = random()
         sumProb = 0
         chosenRule = None
@@ -71,20 +81,23 @@ class RuleDict:
             if sumProb > choice:
                 chosenRule = rule[1:]
                 break
-        #handles possible floating point errors
+            
+        # Handle possible floating point errors
         if chosenRule is None:
             chosenRule = executionRules[0][1:]
+            
         resultElements = []
         for action in chosenRule:
             (thing, modifications) = action
             if type(thing) == type(""):
                 # it's a rule name
                 nextRule = self.rules[thing]
+                self.ruleLimits[thing] -= 1
                 resultElements += self.chooseAndExecuteRule(nextRule,
-                                                       existingModifications + modifications, 
-                                                       remainingDepthLimit - 1)
+                                                       existingModifications + modifications)
+                self.ruleLimits[thing] += 1
             else:
-                resultElements.append(thing.modify(existingModifications))
+                resultElements.append((existingModifications + modifications).modifyElement(thing))
         return resultElements
 
     
@@ -98,20 +111,182 @@ class Rule:
     "to make a caterpillar, make a circle and then make another caterpillar
     shifted to the right by 10 and scaled by .9".
     """
-    def __init__(self, name, executionRules):
+    def __init__(self, name, executionRules, limit):
         self.name = name
+        self.limit = limit
         
         # Each execution rule is of the form:
         # [p, (r, m), (r, m) ..., (r, m)]
         # where p is a probability proportion (not actually a probability until we normalize), 
-        # each r is either a Rule or an Element, and each m is a modification
-        # list.
+        # each r is either a Rule name or an Element, and each m is a modifications object.
         # executionRules is a list of these.
         self.executionRules = executionRules
         totalProbability = sum([x[0] for x in self.executionRules])
         self.executionRules = map(lambda k: [(k[0] / float(totalProbability))] + k[1:], self.executionRules)
     
-
+class Modifications:
+    """
+    A Modifications object keeps track of a list of modifications. It knows
+    how to apply those modifications to an Element, or to an individual Shape.
+    
+    It also has a number of static methods that can create modifications
+    objects, and can combine two objects.
+    
+    A single modification in a list is a list of two functions. The first
+    is a function that will be applied to the Element that's modified.
+    The second is a function that will be applied to each shape.
+    """
+    def __init__(self, modifications = []):
+        self.modifications = modifications
+    
+    def __add__(self, other):
+        return Modifications(self.modifications + other.modifications)
+        
+    
+    """
+    This method will take an element and return a new copy of it, 
+    with any modifications in the Modifications object applied to both
+    it and any shapes in its frame list.
+    """    
+    def modifyElement(self, elem):
+        elemcopy = deepcopy(elem)
+        for modification in self.modifications:
+            modification[0](elemcopy)
+        for shape in elemcopy.frameList:
+            self.modifyShape(shape)
+        return elemcopy
+        
+    """
+    This method is like the above, but for shapes. It also doesn't act on a
+    copy, for efficiency reasons.
+    """
+    def modifyShape(self, shape):
+        for modification in self.modifications:
+            modification[1](shape)
+        return shape
+    
+    """
+    This function will be useful for many static methods where we are modifying
+    either the element or the shapes in it, but not both.
+    """
+    @staticmethod
+    def do_nothing(element_or_shape):
+        pass
+    
+    
+    """
+    Translates a shape absolutely in space.
+    """
+    @staticmethod
+    def AbsoluteTranslate(x, y):
+        def translate(shape):
+            shape.x += x
+            shape.y += y
+        return Modifications([(Modifications.do_nothing, translate)])
+        
+    """
+    Translates a shape in space, relative to its current other properties,
+    specifically rotation and scale.
+    """
+    @staticmethod
+    def Translate(x, y):
+        def translate(shape):
+            shape.x += x * shape.xScale * math.cos((math.pi / 180) * shape.rotation)
+            shape.y -= x * shape.yScale * math.sin((math.pi / 180) * shape.rotation)
+            shape.x -= y * shape.xScale * math.sin((math.pi / 180) * shape.rotation)
+            shape.y -= y * shape.yScale * math.cos((math.pi / 180) * shape.rotation)
+        return Modifications([(Modifications.do_nothing, translate)])
+        
+    """
+    Rotates a shape by an amount specified in degrees.
+    """
+    @staticmethod
+    def Rotate(theta):
+        def rotate(shape):
+            shape.rotation += theta
+        return Modifications([(Modifications.do_nothing, rotate)])
+    
+    """
+    Scales a shape by a specified factor.
+    """
+    @staticmethod
+    def Scale(factor):
+        def scale(shape):
+            shape.xScale *= factor
+            shape.yScale *= factor
+        return Modifications([(Modifications.do_nothing, scale)])
+        
+    """
+    Scales a shape horizontally by a specified factor.
+    """
+    @staticmethod
+    def ScaleX(factor):
+        def scale(shape):
+            shape.xScale *= factor
+        return Modifications([(Modifications.do_nothing, scale)])
+        
+    """
+    Scales a shape vertically by a specified factor.
+    """
+    @staticmethod
+    def ScaleY(factor):
+        def scale(shape):
+            shape.yScale *= factor
+        return Modifications([(Modifications.do_nothing, scale)])
+      
+    """
+    Rotates a shape's hue by a specified number of degrees.
+    """
+    @staticmethod
+    def ChangeHue(theta):
+        def changeHue(shape):
+            shape.fill[0] += theta
+            shape.fill[0] %= 360
+        return Modifications([(Modifications.do_nothing, changeHue)])
+     
+    """
+    Multiplies a shape's saturation by a specified factor.
+    """
+    @staticmethod
+    def ChangeSaturation(f):
+        def changeSaturation(shape):
+            shape.fill[1] *= f
+            shape.fill[1] = min(shape.fill[1], 100)
+            shape.fill[1] = max(shape.fill[1], 0)
+        return Modifications([(Modifications.do_nothing, changeSaturation)])
+     
+    """
+    Multiplies a shape's brightness by a specified factor.
+    """
+    @staticmethod
+    def ChangeBrightness(f):
+        def changeBrightness(shape):
+            shape.fill[2] *= f
+            shape.fill[2] = min(shape.fill[2], 100)
+            shape.fill[2] = max(shape.fill[2], 0)
+        return Modifications([(Modifications.do_nothing, changeBrightness)])
+     
+    
+    """
+    Multiplies a shape's alpha (opacity) by a specified factor.
+    """
+    @staticmethod
+    def ChangeAlpha(factor):
+        def changeAlpha(shape):
+            shape.alpha *= factor
+        return Modifications([(Modifications.do_nothing, changeAlpha)])
+        
+    """
+    Delays the animation of an element by a specified number of frames.
+    """
+    @staticmethod
+    def Delay(frames):
+        def delay(elem):
+            elem.currentFrame += frames
+            elem.currentFrame %= elem.totalFrames
+        return Modifications([(delay, Modifications.do_nothing)])
+        
+    
 
 class Element:
     """
@@ -130,25 +305,15 @@ class Element:
     def drawFrame(self, image, draw):
         self.frameList[self.currentFrame].render(image, draw)
         
-        
-    def modify(self, modifications):
-        """
-        Applies some modification (like scaling, changing hue, etc) to all
-        frames of the animation.
-        """
-        newElem = Element(map(lambda k: k.withModifications(modifications), self.frameList), 0)
-        newElem.currentFrame = (self.currentFrame + sum(map(lambda k: int(k.split(' ')[-1]), 
-                          filter(lambda k: k[0:5] == "delay", modifications)))) % self.totalFrames
-        return newElem
-        
     
 class Shape(object):
     
     def __init__(self):
         self.fill = [0, 100, 50]
-        self.scale = 1
         self.x = 0
         self.y = 0
+        self.xScale = 1
+        self.yScale = 1
         self.width = 100
         self.height = 100
         self.rotation = 0
@@ -161,8 +326,8 @@ class Shape(object):
         It relies on calling self.draw, which will be different depending on
         what kind of shape (rectangle, ellipse, etc) this is.
         """
-        width = self.width * self.scale
-        height = self.height * self.scale
+        width = self.xScale * self.width
+        height = self.yScale * self.height
         
         newImage = Image.new("RGB", (int(width), int(height)), 0)
         newdraw = ImageDraw.Draw(newImage)
@@ -181,56 +346,11 @@ class Shape(object):
         image.paste(newImage, (int(self.x - mask.size[0]/2.0), int(self.y - mask.size[1]/2.0)), mask)
     
 
-    
-    def withModifications(self, modifications):
-        """
-        Modifications should be an ordered list of modifications to apply.
-        Those modifications can take the following forms:
-        "changehue x" increases the hue by x
-        "sethue x" sets the hue to x
-        "changealpha x" multiplies the alpha by x
-        "setalpha x" sets the alpha to x
-        "scale x" multiplies the scale by x
-        "translate x y" translates by the tuple (x, y)
-        "rotate x" rotates by x degrees
-        "delay x" delays the animation by x frames
-        """
-        newShape = deepcopy(self)
-        for modification in modifications:
-            desc = modification.split(" ")
-            if desc[0] == "changehue":
-                newShape.fill[0] += int(desc[1])
-            if desc[0] == "sethue":
-                newShape.fill[0] = int(desc[1])
-            if desc[0] == "changealpha":
-                newShape.alpha *= float(desc[1])
-                if newShape.alpha > 1:
-                    newShape.alpha = 1
-            if desc[0] == "setalpha":
-                newShape.alpha = float(desc[1])
-            if desc[0] == "scale":
-                newShape.scale *= float(desc[1])
-            if desc[0] == "translate":
-                newShape.x += float(desc[1])
-                newShape.y += float(desc[2])
-            if desc[0] == "rtranslate":
-                # Relative translate. Translate relative to scale & rotation.
-                newShape.x += float(desc[1]) * newShape.scale * math.cos((math.pi / 180) * newShape.rotation)
-                newShape.y -= float(desc[1]) * newShape.scale * math.sin((math.pi / 180) * newShape.rotation)
-                newShape.x -= float(desc[2]) * newShape.scale * math.sin((math.pi / 180) * newShape.rotation)
-                newShape.y -= float(desc[2]) * newShape.scale * math.cos((math.pi / 180) * newShape.rotation)
-            if desc[0] == "rotate":
-                newShape.rotation += float(desc[1])
-            if desc[0] == "delay":
-                # Handled at the element level.
-                pass
-        return newShape
-
 class Rectangle(Shape):
     """
     A Rectangle primitive. (x, y) is the rectangle's center.
     """
-    def __init__(self, x, y, width, height):
+    def __init__(self, x=0, y=0, width=100, height=100):
         super(Rectangle, self).__init__()
         self.x = x
         self.y = y
@@ -245,12 +365,13 @@ class Ellipse(Shape):
     """
     An Ellipse primitive. (x, y) is the ellipse's center.
     """
-    def __init__(self, x, y, width, height):
+    def __init__(self, x=0, y=0, width=100, height=100):
         super(Ellipse, self).__init__()
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+        
 
     def draw(self, xdraw, fillvalue, width, height):
         xdraw.ellipse(((0, 0), (int(width), int(height))), fill=fillvalue)
