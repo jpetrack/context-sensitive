@@ -57,12 +57,14 @@ class RuleDict:
     def __init__(self, rules):
         self.rules = {}
         self.ruleLimits = {}
+        self.startFrames = {}
         for rule in rules:
             self.rules[rule.name] = rule.executionRules
             self.ruleLimits[rule.name] = rule.limit
+            self.startFrames[rule.name] = rule.startFrame
         self.initialRule = rules[0].executionRules
         
-    def chooseAndExecuteRule(self, executionRules = 0, existingModifications = 0):
+    def chooseAndExecuteRule(self, executionRules = 0, existingModifications = 0, startFrame = 0):
         if 0 in self.ruleLimits.values():
             return []
         if executionRules == 0:
@@ -94,10 +96,12 @@ class RuleDict:
                 nextRule = self.rules[thing]
                 self.ruleLimits[thing] -= 1
                 resultElements += self.chooseAndExecuteRule(nextRule,
-                                                       existingModifications + modifications)
+                                        existingModifications + modifications, self.startFrames[thing])
                 self.ruleLimits[thing] += 1
             else:
-                resultElements.append((existingModifications + modifications).modifyElement(thing))
+                newElem = (existingModifications + modifications).modifyElement(thing)
+                newElem.framesUntilDrawn = startFrame
+                resultElements.append(newElem)
         return resultElements
 
     
@@ -111,9 +115,10 @@ class Rule:
     "to make a caterpillar, make a circle and then make another caterpillar
     shifted to the right by 10 and scaled by .9".
     """
-    def __init__(self, name, executionRules, limit):
+    def __init__(self, name, executionRules, limit, startFrame = 0):
         self.name = name
         self.limit = limit
+        self.startFrame = startFrame
         
         # Each execution rule is of the form:
         # [p, (r, m), (r, m) ..., (r, m)]
@@ -195,6 +200,17 @@ class Modifications:
             shape.y -= x * shape.yScale * math.sin((math.pi / 180) * shape.rotation)
             shape.x -= y * shape.xScale * math.sin((math.pi / 180) * shape.rotation)
             shape.y -= y * shape.yScale * math.cos((math.pi / 180) * shape.rotation)
+        return Modifications([(Modifications.do_nothing, translate)])
+    """
+    Translates a shape in space, relative only to its scale and not rotation
+    """
+    @staticmethod
+    def ScaleTranslate(x, y):
+        def translate(shape):
+            shape.x += x * shape.xScale
+            shape.y -= x * shape.yScale
+            shape.x -= y * shape.xScale
+            shape.y -= y * shape.yScale
         return Modifications([(Modifications.do_nothing, translate)])
         
     """
@@ -292,18 +308,25 @@ class Element:
     """
     An Element is a single shape or animation. It should know what frame it's
     on, how to display itself, and how to modify itself for the sake of
-    recursively creating more copies of itself.
+    recursively creating more copies of itself. It also knows when it should
+    start being displayed.
     """
     
-    def __init__(self, frameList, currentFrame = 0):
+    def __init__(self, frameList, currentFrame = 0, firstFrame = 0):
         self.frameList = frameList
         self.currentFrame = 0
         self.totalFrames = len(frameList)
+        self.framesUntilDrawn = firstFrame
+        
         
     def incrementFrame(self):
-        self.currentFrame = (self.currentFrame + 1) % self.totalFrames
+        if self.framesUntilDrawn == 0:
+            self.currentFrame = (self.currentFrame + 1) % self.totalFrames
     def drawFrame(self, image, draw):
-        self.frameList[self.currentFrame].render(image, draw)
+        if self.framesUntilDrawn == 0:
+            self.frameList[self.currentFrame].render(image, draw)
+        else:
+            self.framesUntilDrawn -= 1
         
     
 class Shape(object):
@@ -375,6 +398,26 @@ class Ellipse(Shape):
 
     def draw(self, xdraw, fillvalue, width, height):
         xdraw.ellipse(((0, 0), (int(width), int(height))), fill=fillvalue)
+    
+    
+    
+    
+class Triangle(Shape):
+    """
+    An equliateral triangle primitive. (x, y) is the triangle's center.
+    """
+    def __init__(self, x=0, y=0, width=100, height=100):
+        super(Triangle, self).__init__()
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        
+
+    def draw(self, xdraw, fillvalue, width, height):
+        # Some geometry goes into this to ensure that this triangle will
+        # look correct when rotated.
+        xdraw.polygon(((int(width/2), 0), (int(width * (.5 * (1 - math.sqrt(3) / 2.0))), int(.75 * height)), (int(width * (.5 * (1 + math.sqrt(3) / 2.0))), int(.75 * height))), fill=fillvalue)
     
     
     

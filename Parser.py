@@ -17,7 +17,9 @@ modifications = "{" + ZeroOrMore(modification) + "}"
 
 
 # SHAPES
-basicShapeName = SignificantLiteral("Rectangle") | SignificantLiteral("Ellipse")
+basicShapeName = SignificantLiteral("Rectangle") |\
+                 SignificantLiteral("Ellipse") |\
+                 SignificantLiteral("Triangle")
 shape = alphanum_word + ":" + basicShapeName + modifications
 shapes = "Shapes:" + ZeroOrMore(shape)
 
@@ -39,5 +41,12 @@ rules = "Rules:" + ZeroOrMore(rule)
 limit = alphanum_word + ":" + number
 limits = Optional(Literal("Limits:")) + ZeroOrMore(limit)
 
+# START TIMES
+starttime = alphanum_word + ":" + number
+starttimes = Optional(Literal("Start times:")) + ZeroOrMore(starttime)
+
 def parse(text):
-    return (metadata + shapes + primitives + rules + limits).parse_string(text)
+    # Allow the user to type .5 instead of 0.5.
+    text = str.replace(" .", " 0.")
+    text = str.replace("-.", "-0.")
+    return (metadata + shapes + primitives + rules + limits + starttimes).parse_string(text)
