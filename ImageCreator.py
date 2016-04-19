@@ -13,6 +13,11 @@ from PIL import Image, ImageDraw
 from copy import deepcopy
 from random import random
 import math
+import tempfile
+import os
+import subprocess
+import shutil
+import sys
 class ImageCreator:
     """
     An ImageCreator is essentially a list of all of the Elements in an image.
@@ -21,7 +26,7 @@ class ImageCreator:
     
     It is the top-level class in the hierarchy. It controls top-level actions.
     """
-    def __init__(self, width = 800, height = 600, elems = [], outputpath = "", totalFrames = 20):
+    def __init__(self, width = 512, height = 512, elems = [], outputpath = "", totalFrames = 20):
         self.width = width
         self.height = height
         self.elements = elems
@@ -37,15 +42,35 @@ class ImageCreator:
             elem.incrementFrame()
             
         
-    def renderAnimation(self):
+    def renderAnimation(self, outputType, framerate):
         print "Rendering %d total frames..." % self.totalFrames
+        createVideo = outputType in ["mp4"]
+        if (createVideo):
+            path = tempfile.mkdtemp()
+        else: 
+            if not (os.path.exists(self.outputpath)):
+                os.mkdir(self.outputpath)
+            path = self.outputpath
         for i in xrange(self.totalFrames):
             print "Rendering frame %d." % i
             im = Image.new("RGBA", (self.width, self.height), "white")
             draw = ImageDraw.Draw(im)
             self.renderFrame(im, draw)
-            im.save(self.outputpath + "%05d" % self.frame + ".png", "PNG")
+            im.save(path + '/' + self.outputpath + "%05d" % self.frame + ".png", "PNG")
             self.frame += 1
+        if (createVideo):
+            # The options used here:
+            # -i is the input path. By adding "%05d", it looks for images with
+            # 5 decimal digits after the name.
+            # -b:v is the video bitrate.
+            # -y says to overwrite files without asking.
+            # -r is the framerate.
+            subprocess.call(['./ffmpeg', '-i', path + '/' + self.outputpath + '%05d.png', 
+                             '-b:v', '8000k', '-y', '-r', str(framerate),
+                             self.outputpath + "." + outputType])
+                             
+            shutil.rmtree(path)
+            
         
 
 class RuleDict:
@@ -92,15 +117,20 @@ class RuleDict:
         for action in chosenRule:
             (thing, modifications) = action
             if type(thing) == type(""):
-                # it's a rule name
-                nextRule = self.rules[thing]
+                # It's a rule name.
+                # Make sure it's a valid rule name.
+                try:
+                    nextRule = self.rules[thing]
+                except KeyError:
+                    print "Invalid rule or primitive name: %s." % thing
+                    sys.exit()
                 self.ruleLimits[thing] -= 1
                 resultElements += self.chooseAndExecuteRule(nextRule,
                                         existingModifications + modifications, self.startFrames[thing])
                 self.ruleLimits[thing] += 1
             else:
+                thing.framesUntilDrawn = startFrame
                 newElem = (existingModifications + modifications).modifyElement(thing)
-                newElem.framesUntilDrawn = startFrame
                 resultElements.append(newElem)
         return resultElements
 
@@ -290,10 +320,14 @@ class Modifications:
     def ChangeAlpha(factor):
         def changeAlpha(shape):
             shape.alpha *= factor
+            if shape.alpha > 1:
+                shape.alpha = 1
         return Modifications([(Modifications.do_nothing, changeAlpha)])
         
     """
     Delays the animation of an element by a specified number of frames.
+    So, if you modify with Delay(3), it will start on frame number 3 (indexing
+    from zero).
     """
     @staticmethod
     def Delay(frames):
@@ -301,6 +335,18 @@ class Modifications:
             elem.currentFrame += frames
             elem.currentFrame %= elem.totalFrames
         return Modifications([(delay, Modifications.do_nothing)])
+        
+    """
+    Delays the start of the animation of an element by a specified number of 
+    frames.
+    So, if you modify with DelayStart(3), it will begin rendering on the
+    third frame of your animation.
+    """
+    @staticmethod
+    def DelayStart(frames):
+        def delayStart(elem):
+            elem.framesUntilDrawn += frames
+        return Modifications([(delayStart, Modifications.do_nothing)])
         
     
 
@@ -322,11 +368,12 @@ class Element:
     def incrementFrame(self):
         if self.framesUntilDrawn == 0:
             self.currentFrame = (self.currentFrame + 1) % self.totalFrames
+        else:
+            self.framesUntilDrawn -= 1
     def drawFrame(self, image, draw):
         if self.framesUntilDrawn == 0:
             self.frameList[self.currentFrame].render(image, draw)
-        else:
-            self.framesUntilDrawn -= 1
+            
         
     
 class Shape(object):
