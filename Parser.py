@@ -49,4 +49,5 @@ def parse(text):
     # Allow the user to type .5 instead of 0.5.
     text = text.replace(" .", " 0.")
     text = text.replace("-.", "-0.")
+    text = text.replace(":.", ":0.")
     return (metadata + shapes + primitives + rules + limits + starttimes).parse_string(text)

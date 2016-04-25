@@ -65,8 +65,8 @@ class ImageCreator:
             # -b:v is the video bitrate.
             # -y says to overwrite files without asking.
             # -r is the framerate.
-            subprocess.call(['./ffmpeg', '-i', path + '/' + self.outputpath + '%05d.png', 
-                             '-b:v', '8000k', '-y', '-r', str(framerate),
+            subprocess.call(['./ffmpeg', '-r', str(framerate), '-i', path + '/' + self.outputpath + '%05d.png', 
+                             '-b:v', '8000k', '-y',
                              self.outputpath + "." + outputType])
                              
             shutil.rmtree(path)

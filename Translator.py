@@ -127,7 +127,7 @@ def translate(AST):
         frameList = []
         for frameSpecification in frames:
             firstFrame, firstFrameModifications = frameSpecification[:2]
-            firstFrame = shapeDict[firstFrame]
+            firstFrame = deepcopy(shapeDict[firstFrame])
             firstFrameShape = translateModifications(
                     firstFrameModifications).modifyShape(firstFrame)
             frameList.append(firstFrameShape)
@@ -172,17 +172,20 @@ def translate(AST):
             else:
                 executionRules[i] = (step[0], translateModifications(step[1]))
         if rulesByName.has_key(name):
-            rulesByName[name].append([prob] + executionRules)
+            rulesByName[name].append([float(prob)] + executionRules)
         else:
-            rulesByName[name] = [[prob] + executionRules]
+            rulesByName[name] = [[float(prob)] + executionRules]
             
             
     ruleMaker = lambda (name, execrules): ImageCreator.Rule(
             name, execrules, limitsByName[name], startTimesByName[name])
     ruleDict = ImageCreator.RuleDict(map (ruleMaker, rulesByName.items()))
+    ruleDict.initialRule = ruleDict.rules[rules[0][0]]
     
     creator = ImageCreator.ImageCreator(int(canvasWidth), int(canvasHeight), ruleDict.chooseAndExecuteRule(startFrame = startTimesByName[rules[0][0]]), animationName, int(duration))
 
+
+    print "Executing rules."
     creator.renderAnimation(filetype, framerate)
         
                     
