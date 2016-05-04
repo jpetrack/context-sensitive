@@ -28,7 +28,7 @@ shapes = "Shapes:" + ZeroOrMore(shape)
 basicFrame = alphanum_word + modifications
 framesGenerator = "(" + number + "times)" + modifications
 framesDescription = basicFrame + Optional(framesGenerator)
-primitive = alphanum_word + "{" + ZeroOrMore(framesDescription) + "}"
+primitive = alphanum_word + "{" + ZeroOrMore(framesDescription) + Optional(SignificantLiteral("end")) + "}"
 primitives = "Primitives:" + ZeroOrMore(primitive)
 
 

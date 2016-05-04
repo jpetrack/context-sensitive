@@ -123,6 +123,10 @@ def translate(AST):
     # Create animation primitives (Elements).
     elemDict = {}
     for primitive in primitives:
+        exp = False
+        if len(primitive) == 3:
+            exp = True
+            primitive = primitive[:-1]
         name, frames = primitive
         frameList = []
         for frameSpecification in frames:
@@ -139,7 +143,7 @@ def translate(AST):
                     nextFrameShape = deepcopy(nextFrameShape)
                     translatedModifications.modifyShape(nextFrameShape)
                     frameList.append(nextFrameShape)
-        elemDict[name] = ImageCreator.Element(frameList)
+        elemDict[name] = ImageCreator.Element(frameList, expires = exp)
     
     # Make a quick limit dictionary and start time dictionary.
     limitsByName = {}
@@ -181,11 +185,11 @@ def translate(AST):
             name, execrules, limitsByName[name], startTimesByName[name])
     ruleDict = ImageCreator.RuleDict(map (ruleMaker, rulesByName.items()))
     ruleDict.initialRule = ruleDict.rules[rules[0][0]]
-    
+    print "Executing rules."
     creator = ImageCreator.ImageCreator(int(canvasWidth), int(canvasHeight), ruleDict.chooseAndExecuteRule(startFrame = startTimesByName[rules[0][0]]), animationName, int(duration))
 
 
-    print "Executing rules."
+    
     creator.renderAnimation(filetype, framerate)
         
                     

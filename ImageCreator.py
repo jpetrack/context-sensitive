@@ -44,10 +44,14 @@ class ImageCreator:
         
     def renderAnimation(self, outputType, framerate):
         print "Rendering %d total frames..." % self.totalFrames
-        createVideo = outputType in ["mp4"]
-        if (createVideo):
-            path = tempfile.mkdtemp()
-        else: 
+        createVideo = outputType in ["mp4", "avi", "gif"]
+        if createVideo:
+            if os.path.exists("ffmpeg"):
+                path = tempfile.mkdtemp()
+            else:
+                createVideo = False
+                print "Could not find ffmpeg. Rendering frames instead."
+        if not createVideo: 
             if not (os.path.exists(self.outputpath)):
                 os.mkdir(self.outputpath)
             path = self.outputpath
@@ -68,8 +72,8 @@ class ImageCreator:
             subprocess.call(['./ffmpeg', '-r', str(framerate), '-i', path + '/' + self.outputpath + '%05d.png', 
                              '-b:v', '8000k', '-y',
                              self.outputpath + "." + outputType])
-                             
             shutil.rmtree(path)
+        
             
         
 
@@ -355,23 +359,28 @@ class Element:
     An Element is a single shape or animation. It should know what frame it's
     on, how to display itself, and how to modify itself for the sake of
     recursively creating more copies of itself. It also knows when it should
-    start being displayed.
+    start and stop being displayed.
     """
     
-    def __init__(self, frameList, currentFrame = 0, firstFrame = 0):
+    def __init__(self, frameList, currentFrame = 0, firstFrame = 0, expires = False):
         self.frameList = frameList
         self.currentFrame = 0
         self.totalFrames = len(frameList)
         self.framesUntilDrawn = firstFrame
+        self.expires = expires
+        self.expired = False
+            
         
         
     def incrementFrame(self):
         if self.framesUntilDrawn == 0:
+            if self.currentFrame + 1 == self.totalFrames and self.expires:
+                self.expired = True
             self.currentFrame = (self.currentFrame + 1) % self.totalFrames
         else:
             self.framesUntilDrawn -= 1
     def drawFrame(self, image, draw):
-        if self.framesUntilDrawn == 0:
+        if self.framesUntilDrawn == 0 and not self.expired:
             self.frameList[self.currentFrame].render(image, draw)
             
         
