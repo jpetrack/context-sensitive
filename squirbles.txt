@@ -1,0 +1,155 @@
+Name: squirbles
+Canvas: 512 x 512
+Format: mp4
+Frames: 90
+Framerate: 10
+Default Depth Limit: 16
+
+Shapes:
+
+circle:Ellipse {
+    x: 18
+    y: 18
+    width: 36
+    height: 36
+}
+
+square:Rectangle {
+    x: 18
+    y: 18
+    width: 36
+    height: 36
+    saturation: 70
+}
+
+
+Primitives:
+
+circle {
+    circle { }
+    (12 times) {
+        translate: (14, -20)
+        rotate: -35
+        hue: -6
+    }
+}
+
+square {
+    square { }
+    (9 times) {
+        translate: (14, -20)
+        rotate: 25
+        hue: 12
+    }
+}
+
+
+
+9frame {
+    square{}
+    (8 times) {
+        rotate: 10
+    }
+}
+
+10frame {
+    square{}
+    (9 times) {
+        rotate: 9
+    }
+}
+
+15frame {
+    square{}
+    (14 times) {
+        rotate: 6
+    }
+}
+
+
+Rules:
+
+rightgenerator1 {
+    downgenerator1{}
+    rightgenerator2{
+        absoluteTranslate: (16,0)
+        hue: 20
+        delay: 1
+    }
+}
+
+rightgenerator2 {
+    downgenerator2{}
+    rightgenerator3{
+        absoluteTranslate: (16,0)
+        hue: 20
+        delay: 1
+    }
+}
+
+rightgenerator3 {
+    downgenerator3{}
+    rightgenerator1{
+        absoluteTranslate: (16,0)
+        hue: 20
+        delay: 1
+    }
+}
+
+
+downgenerator1 {
+    ontop{}
+    downgenerator2{
+        absoluteTranslate: (0,16)
+        hue: 35
+        delay: 2
+    }
+}
+
+downgenerator2 {
+    ontop{}
+    downgenerator3{
+        absoluteTranslate: (0,16)
+        hue: 20
+        delay: 3
+    }
+}
+
+downgenerator3 {
+    ontop{}
+    downgenerator1{
+        absoluteTranslate: (0,16)
+        hue: -55
+        delay: 2
+    }
+}
+
+ontop {
+    circle { scale: 2 }
+    square { hue: 50 }
+}
+
+spread {
+    ontop {
+        rotate: 20
+        hue: 20
+        translate: (-5, 4)
+    }
+    ontop {
+        rotate: -20
+        hue: 40
+        translate: (5, 4)
+    }
+    ontop {
+        rotate: 20
+        hue: 20
+        translate: (5, -4)
+    }
+    ontop {
+        rotate: 60
+        hue: 85
+        translate: (-5, -4)
+    }
+}
+
+

@@ -1,0 +1,556 @@
+Name: slowrandomfade
+Canvas: 700 x 700
+Format: mp4
+Frames: 1500
+Framerate: 30
+Default Depth Limit: 50
+
+Shapes:
+
+rect:Rectangle{
+    x:350 y:350
+    width: 100 height: 100
+}
+
+
+Primitives:
+
+150outof1500 {
+    rect{alpha: .01}
+    (74 times) {
+        alpha: 1.06
+    }
+    rect{alpha: .79}
+    (74 times) {
+        alpha: .9434
+    }
+    rect{alpha: 0}
+    (1349 times) {
+    }
+}
+
+rotator {
+    rect{alpha: .01}
+    (74 times) {
+        alpha: 1.06
+        r: 1
+    }
+    rect{alpha: .79 r:75}
+    (74 times) {
+        alpha: .9434
+        r: 1
+    }
+    rect{alpha: 0}
+    (1349 times) {
+    }
+}
+
+
+Rules:
+mainrule {
+    stepone{}
+    mainrule {}
+}
+
+stepone{
+    steponepointfive{delay:0}
+}
+stepone{
+    steponepointfive{delay: 15}
+}
+stepone{
+    steponepointfive{delay: 30}
+}
+stepone{
+    steponepointfive{delay: 45}
+}
+stepone{
+    steponepointfive{delay: 60}
+}
+stepone{
+    steponepointfive{delay: 75}
+}
+stepone{
+    steponepointfive{delay: 90}
+}
+stepone{
+    steponepointfive{delay: 105}
+}
+stepone{
+    steponepointfive{delay: 120}
+}
+stepone{
+    steponepointfive{delay: 135}
+}
+
+
+steponepointfive{
+    steptwo{delay: 0}
+}
+steponepointfive{
+    steptwo{delay: 150}
+}
+steponepointfive{
+    steptwo{delay: 300}
+}
+steponepointfive{
+    steptwo{delay: 450}
+}
+steponepointfive{
+    steptwo{delay: 600}
+}
+steponepointfive{
+    steptwo{delay: 750}
+}
+steponepointfive{
+    steptwo{delay: 900}
+}
+steponepointfive{
+    steptwo{delay: 1050}
+}
+steponepointfive{
+    steptwo{delay: 1200}
+}
+steponepointfive{
+    steptwo{delay: 1350}
+}
+
+
+
+
+
+steptwo{
+    stepthree{
+        at:(0,0)
+    }
+}
+steptwo{
+    stepthree{
+        at:(70,0)
+    }
+}
+steptwo{
+    stepthree{
+        at:(140,0)
+    }
+}
+steptwo{
+    stepthree{
+        at:(210,0)
+    }
+}
+steptwo{
+    stepthree{
+        at:(280,0)
+    }
+}
+steptwo{
+    stepthree{
+        at:(350,0)
+    }
+}
+steptwo{
+    stepthree{
+        at:(-70,0)
+    }
+}
+steptwo{
+    stepthree{
+        at:(-140,0)
+    }
+}
+steptwo{
+    stepthree{
+        at:(-210,0)
+    }
+}
+steptwo{
+    stepthree{
+        at:(-280,0)
+    }
+}
+steptwo{
+    stepthree{
+        at:(-350,0)
+    }
+}
+
+
+stepthree{
+    stepfour{
+        at:(0,0)
+    }
+}
+stepthree{
+    stepfour{
+        at:(0,70)
+    }
+}
+stepthree{
+    stepfour{
+        at:(0,140)
+    }
+}
+stepthree{
+    stepfour{
+        at:(0,210)
+    }
+}
+stepthree{
+    stepfour{
+        at:(0,280)
+    }
+}
+stepthree{
+    stepfour{
+        at:(0,350)
+    }
+}
+stepthree{
+    stepfour{
+        at:(0,-70)
+    }
+}
+stepthree{
+    stepfour{
+        at:(0,-140)
+    }
+}
+stepthree{
+    stepfour{
+        at:(0,-210)
+    }
+}
+stepthree{
+    stepfour{
+        at:(0,-280)
+    }
+}
+stepthree{
+    stepfour{
+        at:(0,-350)
+    }
+}
+
+stepfour{
+    stepfive{
+        rotate: 0
+    }
+}
+stepfour{
+    stepfive{
+        rotate: 10
+    }
+}
+stepfour{
+    stepfive{
+        rotate: 20
+    }
+}
+stepfour{
+    stepfive{
+        rotate: 30
+    }
+}
+stepfour{
+    stepfive{
+        rotate: 40
+    }
+}
+stepfour{
+    stepfive{
+        rotate: 50
+    }
+}
+stepfour{
+    stepfive{
+        rotate: 60
+    }
+}
+stepfour{
+    stepfive{
+        rotate: 70
+    }
+}
+stepfour{
+    stepfive{
+        rotate: 80
+    }
+}
+
+
+
+
+
+
+stepfive{
+    stepsix{
+        hue: 0
+    }
+}
+stepfive{
+    stepsix{
+        hue: 20
+    }
+}
+stepfive{
+    stepsix{
+        hue: 40
+    }
+}
+stepfive{
+    stepsix{
+        hue: 60
+    }
+}
+stepfive{
+    stepsix{
+        hue: 80
+    }
+}
+stepfive{
+    stepsix{
+        hue: 100
+    }
+}
+stepfive{
+    stepsix{
+        hue: 120
+    }
+}
+
+
+
+
+
+
+stepsix{
+    stepseven{
+        sat: 1
+    }
+}
+stepsix{
+    stepseven{
+        sat: .9
+    }
+}
+stepsix{
+    stepseven{
+        sat: .8
+    }
+}
+stepsix{
+    stepseven{
+        sat: .7
+    }
+}
+stepsix{
+    stepseven{
+        sat: .6
+    }
+}
+
+
+
+
+
+stepseven{
+    stepeight{
+        b: 1
+    }
+}
+stepseven{
+    stepeight{
+        b: .9
+    }
+}
+stepseven{
+    stepeight{
+        b: .8
+    }
+}
+stepseven{
+    stepeight{
+        b: .7
+    }
+}
+stepseven{
+    stepeight{
+        b: 1.1
+    }
+}
+stepseven{
+    stepeight{
+        b: 1.2
+    }
+}
+stepseven{
+    stepeight{
+        b: 1.3
+    }
+}
+
+
+
+
+
+
+stepeight{
+    stepnine{
+        scale:1.7
+    }
+}
+stepeight{
+    stepnine{
+        scale:1.6
+    }
+}
+stepeight{
+    stepnine{
+        scale:1.5
+    }
+}
+stepeight{
+    stepnine{
+        scale:1.4
+    }
+}
+stepeight{
+    stepnine{
+        scale:1.3
+    }
+}
+stepeight{
+    stepnine{
+        scale:1.2
+    }
+}
+stepeight{
+    stepnine{
+        scale:1.1
+    }
+}
+stepeight{
+    stepnine{
+        scale:1
+    }
+}
+stepeight{
+    stepnine{
+        scale:.9
+    }
+}
+stepeight{
+    stepnine{
+        scale:.8
+    }
+}
+stepeight{
+    stepnine{
+        scale:.7
+    }
+}
+stepeight{
+    stepnine{
+        scale:.6
+    }
+}
+
+
+
+
+
+
+stepnine{
+    pickaprimitive{
+        delay:0
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:1
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:2
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:3
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:4
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:5
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:6
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:7
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:8
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:9
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:10
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay: 11
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:12
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:13
+    }
+}
+stepnine{
+    pickaprimitive{
+        delay:14
+    }
+}
+
+
+
+
+
+48 pickaprimitive{
+    150outof1500{}
+}
+pickaprimitive{
+    150outof1500{h:180}
+}
+pickaprimitive{
+    rotator{}
+}
+
+
+Limits:
+mainrule: 2000

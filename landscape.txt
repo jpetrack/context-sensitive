@@ -1,0 +1,82 @@
+Name: landscape
+Canvas: 800 x 600
+Format: mp4
+Frames: 500
+Framerate: 30
+Default Depth Limit: 50
+
+Shapes:
+
+t:Triangle{
+    width: 30
+    height: 100
+    h: 60 b: 70
+}
+background:Rectangle{
+    width:800 height:600
+    x: 400 y: 300
+    h: 180 b: 40
+}
+hill:Ellipse{
+    width: 4500 height: 1600
+    x: 400 y: 850
+    h: 120 s: .7 b: 40
+}
+
+
+Primitives:
+
+twinkle {
+    t{}
+    (44 times){
+        b: 1.013
+        r: 1
+    }
+    t{b: 1.87 r: 45}
+    (44 times){
+        b: .98716
+        r: 1
+    }
+
+}
+background{
+    background{}
+    (499 times) {
+        b: .993
+    }
+}
+hill{
+    hill{}
+}
+
+
+Rules:
+mainrule {
+    background{}
+    star{at: (40, 70) d: 33 r: 73 s: .75}
+    star{at: (89, 280) d: 42 r: 30 s: 1}
+    star{at: (194, 200) d: 87 r: 265 s: .65}
+    star{at: (354, 142) d: 17 r: 102 s: .95}
+    star{at: (454, 40) d:50 r: 47 s: .8}
+    star{at: (506, 282) d: 68 r: 1 s: .7}
+    star{at: (600, 130) d:31 r: 19 s: .85}
+    star{at: (763, 179) d: 5 r: 80 s: .9}
+    hill{}
+
+}
+
+star{
+    
+    twinkle {
+        r: 0 t: (0, 20)
+    }
+    twinkle {
+        r: 90 t: (0, 20)
+    }
+    twinkle {
+        r: 180 t: (0, 20)
+    }
+    twinkle {
+        r: 270 t: (0, 20)
+    }
+}
